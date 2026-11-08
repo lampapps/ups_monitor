@@ -1,0 +1,22 @@
+[Unit]
+Description=UPS monitor (NUT watcher, alerts and ordered shutdown)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@APP_DIR@
+ExecStart=@APP_DIR@/.venv/bin/python -m app monitor
+Restart=always
+RestartSec=5
+# Leaves time to flush the last alert email when the host is powering off.
+TimeoutStopSec=20
+# Keep the shutdown logic alive under memory pressure.
+OOMScoreAdjust=-500
+PrivateTmp=yes
+# NoNewPrivileges must stay off: the local poweroff goes through sudo.
+
+[Install]
+WantedBy=multi-user.target

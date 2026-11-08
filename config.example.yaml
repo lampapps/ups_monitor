@@ -1,0 +1,73 @@
+ups:
+  host: 10.10.1.100
+  port: 3493
+  name: ups1
+  tls: true                      # STARTTLS with the UPS's self-signed certificate
+  connect_timeout_s: 3
+  poll_interval_s: 5
+  poll_interval_on_battery_s: 1
+
+shutdown:
+  enabled: true
+  dry_run: true                  # keep true until `python -m app check` passes on every machine
+  runtime_threshold_minutes: 10  # shut down when on battery and runtime <= this
+  consecutive_polls: 3           # good polls in a row required before triggering
+  shutdown_self: true            # this host is always shut down last
+  preflight_interval_hours: 24   # automatic ssh/sudo check of every target, emailed on failure; 0 disables
+  machines:                      # shutdown order = list order; add as many as needed
+    - name: P3Tiny
+      host: 10.10.1.101          # placeholder, set the real address
+      user: upsshutdown
+      wait_for_down_s: 120
+    - name: pi4-1
+      host: 10.10.1.102          # placeholder, set the real address
+      user: upsshutdown
+      wait_for_down_s: 120
+
+smtp:
+  enabled: false
+  host: smtp.example.com
+  port: 587
+  security: starttls             # starttls | ssl | none
+  sender: ups@example.com
+  recipients:
+    - you@example.com
+  username_env: SMTP_USERNAME    # names of variables in .env, not the values
+  password_env: SMTP_PASSWORD
+  timeout_s: 10
+  events:                        # true = send by email, false = don't
+    on_battery: true             # power lost, running on battery
+    power_restored: true
+    low_battery: true
+    replace_battery: true
+    overload: true
+    self_test_ok: false          # weekly self-test passed
+    self_test_failed: true
+    ups_unreachable: true        # no answer from the UPS for 30 s
+    ups_recovered: true
+    shutdown_started: true
+    shutdown_step_ok: false      # each machine reported shut down
+    shutdown_step_failed: true
+    shutdown_completed: true
+    shutdown_aborted: true       # power returned mid-sequence
+    shutdown_interrupted: true   # monitor restarted mid-sequence
+    preflight_failed: true       # daily ssh/sudo check of the targets
+    preflight_ok: true           # check passes again after a failure
+    monitor_started: false
+    monitor_stopped: false
+    conn_refused: false          # UPS refused the connection (client limit)
+    retention_failed: true       # nightly rollup/purge of old data failed
+
+kuma:
+  enabled: false
+  push_url_env: KUMA_PUSH_URL    # full push URL lives in .env
+  interval_s: 60
+
+web:
+  host: 0.0.0.0
+  port: 8080
+  allow_check_now: true          # the dashboard's "Check now" button; false makes the UI fully read-only
+
+retention:
+  raw_days: 30
+  rollup_days: 365

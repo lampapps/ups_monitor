@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UPS Monitor</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ asset('app.css') }}">
+  <script src="{{ asset('theme-init.js') }}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1 id="title">UPS Monitor</h1>
+      <div class="sub" id="subtitle">Loading…</div>
+    </div>
+    <div class="topbar-right">
+      <span id="status-badge" class="badge badge-unknown">–</span>
+      <span class="sub" id="updated"></span>
+      <button id="theme-toggle" class="btn" type="button" aria-label="Toggle light and dark theme">Theme</button>
+    </div>
+  </header>
+
+  <div id="banners"></div>
+
+  <main>
+    <section class="cards" id="cards">
+      <div class="card"><div class="label">Battery charge</div><div class="value" id="v-charge">–</div><div class="note" id="n-charge"></div></div>
+      <div class="card"><div class="label">Runtime remaining</div><div class="value" id="v-runtime">–</div><div class="note" id="n-runtime"></div></div>
+      <div class="card"><div class="label">Load</div><div class="value" id="v-load">–</div><div class="note" id="n-load"></div></div>
+      <div class="card"><div class="label">Input voltage</div><div class="value" id="v-input">–</div><div class="note" id="n-input"></div></div>
+      <div class="card"><div class="label">Output voltage</div><div class="value" id="v-output">–</div><div class="note" id="n-output"></div></div>
+      <div class="card"><div class="label">Temperature</div><div class="value" id="v-temp">–</div><div class="note" id="n-temp"></div></div>
+    </section>
+
+    <details class="panel" id="info-panel">
+      <summary>
+        <span class="summary-title">UPS and shutdown policy</span>
+        <span class="sub" id="info-summary"></span>
+      </summary>
+      <div class="two-col">
+        <div>
+          <h2>UPS</h2>
+          <dl class="kv" id="ups-info"></dl>
+        </div>
+        <div>
+          <h2>Shutdown policy</h2>
+          <dl class="kv" id="policy-info"></dl>
+        </div>
+      </div>
+    </details>
+
+    <section class="panel" id="readiness-panel" hidden>
+      <div class="panel-head">
+        <h2>Shutdown readiness</h2>
+        <div class="rd-actions">
+          <span class="sub" id="rd-status" aria-live="polite"></span>
+          <button id="rd-check" class="btn" type="button">Check now</button>
+        </div>
+      </div>
+      <p class="sub" id="rd-summary"></p>
+      <div class="table-wrap">
+        <table class="events readiness">
+          <thead>
+            <tr><th>#</th><th>Machine</th><th>Result</th><th>Ping</th><th>SSH login</th><th>Sudo rule</th><th>Poweroff dry-run</th><th>Checked</th></tr>
+          </thead>
+          <tbody id="rd-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>History</h2>
+        <div class="ranges" id="ranges" role="group" aria-label="Time range">
+          <button type="button" class="btn" data-range="1h">1h</button>
+          <button type="button" class="btn" data-range="6h">6h</button>
+          <button type="button" class="btn" data-range="24h">24h</button>
+          <button type="button" class="btn" data-range="7d">7d</button>
+          <button type="button" class="btn" data-range="30d">30d</button>
+          <button type="button" class="btn" data-range="1y">1y</button>
+        </div>
+      </div>
+      <p class="sub" id="history-note"></p>
+      <div class="charts">
+        <div class="chart-box"><h3>Battery charge and runtime</h3><canvas id="c-battery"></canvas></div>
+        <div class="chart-box"><h3>Voltage</h3><canvas id="c-voltage"></canvas></div>
+        <div class="chart-box"><h3>Load</h3><canvas id="c-load"></canvas></div>
+        <div class="chart-box"><h3>Temperature</h3><canvas id="c-temp"></canvas></div>
+      </div>
+      <p class="sub">Shaded areas mark time spent on battery. Gaps mean the UPS could not be read.</p>
+    </section>
+
+    <section class="panel" id="shutdown-panel" hidden>
+      <h2>Shutdown history</h2>
+      <div id="shutdown-runs"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Events</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="events">
+          <thead><tr><th>Time</th><th>Level</th><th>Event</th><th>Details</th></tr></thead>
+          <tbody id="events-body"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <div class="pager-nav">
+          <button id="ev-first" class="btn" type="button">&laquo; Newest</button>
+          <button id="ev-prev" class="btn" type="button">&lsaquo; Newer</button>
+          <button id="ev-next" class="btn" type="button">Older &rsaquo;</button>
+          <button id="ev-last" class="btn" type="button">Oldest &raquo;</button>
+        </div>
+        <span class="sub" id="ev-page" aria-live="polite"></span>
+        <label class="sub">Per page
+          <select id="ev-size" class="btn">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sub">ups_monitor {{ version }} · read-only</footer>
+
+  <script src="{{ asset('vendor/chart.umd.min.js') }}"></script>
+  <script src="{{ asset('app.js') }}"></script>
+</body>
+</html>

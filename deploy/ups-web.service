@@ -1,0 +1,18 @@
+[Unit]
+Description=UPS monitor web UI (read-only)
+After=network-online.target ups-monitor.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@APP_DIR@
+ExecStart=@APP_DIR@/.venv/bin/python -m app web
+Restart=always
+RestartSec=5
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

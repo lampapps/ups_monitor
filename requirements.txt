@@ -1,0 +1,5 @@
+pydantic>=2.6,<3
+python-dotenv>=1.0
+PyYAML>=6.0
+flask>=3.0,<4
+gunicorn>=22.0
