@@ -71,3 +71,5 @@ web:
 retention:
   raw_days: 30
   rollup_days: 365
+  events_days: 365               # events (power outages, alerts)
+  shutdown_days: 365             # shutdown history runs

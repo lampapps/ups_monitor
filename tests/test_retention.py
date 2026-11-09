@@ -4,7 +4,7 @@ import pytest
 
 from app import db, retention
 from app.config import RetentionConfig
-from app.retention import RetentionRunner, purge, reclaim, rollup, watermark
+from app.retention import RetentionRunner, purge, purge_history, reclaim, rollup, watermark
 
 DAY = 86400
 NOW = 1_800_000_000 - 1_800_000_000 % 60 + 30  # 30 s into a minute
@@ -160,12 +160,19 @@ def test_purge_deletes_in_batches(conn, monkeypatch):
     assert purge(conn, NOW, CFG)[0] == 200 and count(conn, "samples") == 0
 
 
-def test_events_and_shutdown_history_are_never_purged(conn):
+def test_old_events_and_finished_shutdown_runs_are_purged(conn):
+    old, recent = NOW - 400 * DAY, NOW - 10 * DAY
     with conn:
-        conn.execute("INSERT INTO events (ts, type, severity, message) VALUES (1, 't', 'info', 'old')")
-        conn.execute("INSERT INTO shutdown_runs (started_ts, state, dry_run, reason) VALUES (1, 'completed', 0, 'r')")
-    purge(conn, NOW, CFG)
-    assert count(conn, "events") == 1 and count(conn, "shutdown_runs") == 1
+        for ts in (old, recent):
+            conn.execute("INSERT INTO events (ts, type, severity, message) VALUES (?, 't', 'info', 'm')", (ts,))
+        for run_id, ts, state in ((1, old, "completed"), (2, old, "running"), (3, recent, "completed")):
+            conn.execute("INSERT INTO shutdown_runs (id, started_ts, state, dry_run, reason) VALUES (?, ?, ?, 0, 'r')",
+                         (run_id, ts, state))
+            conn.execute("INSERT INTO shutdown_steps (run_id, seq, machine, state) VALUES (?, 1, 'a', 'done')", (run_id,))
+    assert purge_history(conn, NOW, CFG) == (1, 1)
+    assert [r[0] for r in conn.execute("SELECT id FROM shutdown_runs ORDER BY id")] == [2, 3]  # running run kept
+    assert [r[0] for r in conn.execute("SELECT run_id FROM shutdown_steps ORDER BY run_id")] == [2, 3]
+    assert count(conn, "events") == 1
 
 
 def test_rollups_must_outlive_raw_data():

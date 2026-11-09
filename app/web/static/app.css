@@ -25,6 +25,7 @@ main, .topbar, #banners, footer { max-width: 1200px; margin: 0 auto; padding: 0 
 .topbar { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; align-items: center; padding-top: 1rem; padding-bottom: .75rem; }
 .topbar-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
 footer { padding-top: 1rem; padding-bottom: 2rem; }
+footer a { color: var(--accent); }
 
 .btn {
   background: var(--panel); color: var(--text); border: 1px solid var(--border);

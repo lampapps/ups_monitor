@@ -80,7 +80,7 @@ def test_index_is_self_contained_and_has_no_inline_script(client):
     html = resp.get_data(as_text=True)
     assert resp.status_code == 200 and "theme-toggle" in html
     assert not re.search(r"<script(?![^>]*\bsrc=)", html)
-    assert not re.search(r"https?://", html)
+    assert not re.search(r"<(?:script|link|img|iframe)\b[^>]*https?://", html)  # plain <a> links are fine
     assert "Content-Security-Policy" in resp.headers and "default-src 'self'" in resp.headers["Content-Security-Policy"]
     assert resp.headers["X-Content-Type-Options"] == "nosniff"
 

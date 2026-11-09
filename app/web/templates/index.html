@@ -35,7 +35,7 @@
 
     <details class="panel" id="info-panel">
       <summary>
-        <span class="summary-title">UPS and shutdown policy</span>
+        <span class="summary-title">Details</span>
         <span class="sub" id="info-summary"></span>
       </summary>
       <div class="two-col">
@@ -125,7 +125,10 @@
     </section>
   </main>
 
-  <footer class="sub">ups_monitor {{ version }} · read-only</footer>
+  <footer class="sub">
+    ups_monitor {{ version }} &middot; MIT License &middot;
+    <a href="https://github.com/lampapps/ups_monitor" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </footer>
 
   <script src="{{ asset('vendor/chart.umd.min.js') }}"></script>
   <script src="{{ asset('app.js') }}"></script>

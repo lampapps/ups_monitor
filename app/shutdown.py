@@ -7,6 +7,7 @@ real process is ever started; failed polls never count towards a trigger.
 import logging
 import re
 import shlex
+import socket
 import sqlite3
 import subprocess
 import threading
@@ -540,5 +541,5 @@ def preflight(cfg: ShutdownConfig, runner: Runner, accept_new: bool = False) -> 
         sudo = StepResult(True, "sudo allows the poweroff command") if sudo_res.returncode == 0 else StepResult(
             False, f"sudo check failed (exit {sudo_res.returncode}): {sudo_res.output}")
         dry = _classify_dry(runner.local(shlex.split(settings.DRYRUN_COMMAND)), local=True)
-        checks.append(TargetCheck(_SELF, len(checks) + 1, None, None, sudo, dry))
+        checks.append(TargetCheck(_SELF, len(checks) + 1, None, None, sudo, dry, _clean_hostname(socket.gethostname())))
     return checks

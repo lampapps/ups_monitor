@@ -90,7 +90,7 @@ Everything is verified except the actual power-off, which only a manual live tes
 
 ## Rehearsing, then going live
 
-1. `python -m app drill` runs the whole sequence as a dry run: events, emails and the dashboard's shutdown history are
+1. `.venv/bin/python -m app drill` runs the whole sequence as a dry run: events, emails and the dashboard's shutdown history are
    real, nothing is powered off.
 2. Optional outage test with `dry_run: true`: set `runtime_threshold_minutes` above the UPS's current runtime, unplug the
    UPS from the wall for a minute and watch the log, emails and dashboard. Plug it back in; the sequence aborts if it has
@@ -123,7 +123,7 @@ sudo systemctl reset-failed ups-monitor          # clear a failed state after fi
 Stopping `ups-web` only removes the dashboard; the monitor keeps running independently.
 
 - Logs: `journalctl -u ups-monitor -f` and `journalctl -u ups-web`.
-- Data: `data/ups.db` (SQLite, WAL). Raw samples are kept `retention.raw_days`, 1-minute averages `retention.rollup_days`.
-  Events and shutdown history are kept. Back up with `sqlite3 data/ups.db ".backup 'ups-backup.db'"`.
+- Data: `data/ups.db` (SQLite, WAL). Raw samples are kept `retention.raw_days`, 1-minute averages `retention.rollup_days`,
+  events `retention.events_days` and shutdown history `retention.shutdown_days` (all default 365). Back up with `sqlite3 data/ups.db ".backup 'ups-backup.db'"`.
 - The NUT server has a client limit, so the monitor holds one short connection per poll and never more.
 - Never run a real poweroff while developing. Tests block all process launches, and the drill forces dry run.

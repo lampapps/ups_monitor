@@ -40,11 +40,14 @@ class RetentionStats:
     minutes_rolled: int = 0
     raw_deleted: int = 0
     rollups_deleted: int = 0
+    events_deleted: int = 0
+    shutdown_runs_deleted: int = 0
     pages_freed: int = 0
 
     @property
     def did_work(self) -> bool:
-        return any((self.minutes_rolled, self.raw_deleted, self.rollups_deleted, self.pages_freed))
+        return any((self.minutes_rolled, self.raw_deleted, self.rollups_deleted, self.events_deleted,
+                    self.shutdown_runs_deleted, self.pages_freed))
 
 
 def watermark(conn: sqlite3.Connection) -> int | None:
@@ -104,6 +107,17 @@ def purge(conn: sqlite3.Connection, now: int, cfg: RetentionConfig) -> tuple[int
     return raw, rollups
 
 
+def purge_history(conn: sqlite3.Connection, now: int, cfg: RetentionConfig) -> tuple[int, int]:
+    """Delete expired events and finished shutdown runs with their steps. Returns (events, runs) deleted."""
+    with conn:
+        events = conn.execute("DELETE FROM events WHERE ts < ?", (now - cfg.events_days * 86400,)).rowcount
+        cutoff = now - cfg.shutdown_days * 86400
+        expired = "SELECT id FROM shutdown_runs WHERE started_ts < ? AND state != 'running'"
+        conn.execute(f"DELETE FROM shutdown_steps WHERE run_id IN ({expired})", (cutoff,))
+        runs = conn.execute(f"DELETE FROM shutdown_runs WHERE id IN ({expired})", (cutoff,)).rowcount
+    return events, runs
+
+
 def _freelist(conn: sqlite3.Connection) -> int:
     return conn.execute("PRAGMA freelist_count").fetchone()[0]
 
@@ -156,13 +170,16 @@ class RetentionRunner:
         try:
             stats = RetentionStats(minutes_rolled=rollup(conn, now))
             stats.raw_deleted, stats.rollups_deleted = purge(conn, now, self.cfg)
+            stats.events_deleted, stats.shutdown_runs_deleted = purge_history(conn, now, self.cfg)
             stats.pages_freed = reclaim(conn)
         finally:
             conn.close()
         if stats.did_work:
             log.info(
-                "retention: rolled up %d minutes, deleted %d raw and %d rollup rows, freed %d pages",
-                stats.minutes_rolled, stats.raw_deleted, stats.rollups_deleted, stats.pages_freed,
+                "retention: rolled up %d minutes, deleted %d raw and %d rollup rows, %d events and %d shutdown runs, "
+                "freed %d pages",
+                stats.minutes_rolled, stats.raw_deleted, stats.rollups_deleted, stats.events_deleted,
+                stats.shutdown_runs_deleted, stats.pages_freed,
             )
         return stats
 

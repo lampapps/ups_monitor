@@ -107,6 +107,8 @@ class WebConfig(_Model):
 class RetentionConfig(_Model):
     raw_days: int = Field(30, ge=1)
     rollup_days: int = Field(365, ge=1)
+    events_days: int = Field(365, ge=1)
+    shutdown_days: int = Field(365, ge=1)
 
     @model_validator(mode="after")
     def _rollups_outlive_raw(self) -> "RetentionConfig":

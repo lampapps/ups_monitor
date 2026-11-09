@@ -97,7 +97,8 @@ def main(argv: list[str] | None = None) -> int:
         stats = RetentionRunner(cfg.retention, db.connect).run_once()
         print(
             f"rolled up {stats.minutes_rolled} minutes, deleted {stats.raw_deleted} raw and "
-            f"{stats.rollups_deleted} rollup rows, freed {stats.pages_freed} pages"
+            f"{stats.rollups_deleted} rollup rows, {stats.events_deleted} events and "
+            f"{stats.shutdown_runs_deleted} shutdown runs, freed {stats.pages_freed} pages"
         )
     elif args.command == "testkuma":
         if not cfg.kuma.enabled:

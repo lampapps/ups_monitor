@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 # Everything the app owns lives under BASE_DIR, so the tree can be moved.
 BASE_DIR = Path(__file__).resolve().parent.parent

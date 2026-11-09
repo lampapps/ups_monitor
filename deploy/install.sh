@@ -51,6 +51,10 @@ id "$SERVICE_USER" >/dev/null 2>&1 || die "user $SERVICE_USER does not exist"
 # The service must already be runnable by that user: venv, config and secrets in place.
 [[ -x $APP_DIR/.venv/bin/python ]] || die "no .venv found; run ./setup.sh first"
 [[ -f $APP_DIR/config.yaml && -f $APP_DIR/.env ]] || die "config.yaml or .env missing; run ./setup.sh first"
+# Files created under sudo end up root-owned and unreadable by the service user.
+for entry in .env config.yaml keys data; do
+    [[ -e $APP_DIR/$entry ]] && chown -R "$SERVICE_USER": "$APP_DIR/$entry"
+done
 runuser -u "$SERVICE_USER" -- "$APP_DIR/.venv/bin/python" -m app config \
     || die "config check failed as $SERVICE_USER (fix config.yaml/.env, or file ownership)"
 
