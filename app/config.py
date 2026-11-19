@@ -25,7 +25,9 @@ class UpsConfig(_Model):
     port: int = Field(3493, ge=1, le=65535)
     name: str = "ups1"
     tls: bool = True
-    connect_timeout_s: float = Field(3.0, gt=0)
+    connect_timeout_s: float = Field(5.0, gt=0)
+    # Extra immediate attempts after a timeout/dropped connection before the poll counts as a gap.
+    retries: int = Field(1, ge=0, le=5)
     poll_interval_s: float = Field(5.0, ge=1)
     poll_interval_on_battery_s: float = Field(1.0, ge=1)
 

@@ -70,13 +70,7 @@ class Poller:
     def poll_once(self) -> PollResult:
         ts = int(self._clock())
         try:
-            values = self._fetch(
-                self.cfg.host,
-                self.cfg.port,
-                self.cfg.name,
-                tls=self.cfg.tls,
-                timeout=self.cfg.connect_timeout_s,
-            )
+            values = self._fetch_with_retries()
             if "ups.status" not in values:
                 raise nut.NutError(nut.PROTOCOL, "reply had no ups.status")
         except nut.NutError as exc:
@@ -98,6 +92,23 @@ class Poller:
             except Exception:
                 log.exception("poll listener failed")
         return result
+
+    def _fetch_with_retries(self) -> dict[str, str]:
+        attempt = 0
+        while True:
+            try:
+                return self._fetch(
+                    self.cfg.host,
+                    self.cfg.port,
+                    self.cfg.name,
+                    tls=self.cfg.tls,
+                    timeout=self.cfg.connect_timeout_s,
+                )
+            except nut.NutError as exc:
+                if exc.kind != nut.UNREACHABLE or attempt >= self.cfg.retries:
+                    raise
+                attempt += 1
+                log.debug("poll attempt %d failed (%s); retrying", attempt, exc)
 
     def next_delay(self) -> float:
         return self.cfg.poll_interval_on_battery_s if self._on_battery else self.cfg.poll_interval_s

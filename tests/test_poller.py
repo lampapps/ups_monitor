@@ -42,7 +42,7 @@ def conn(tmp_path):
 
 def make(conn, *steps, clock=None):
     ticks = iter(range(1000, 10_000))
-    return Poller(UpsConfig(host="x"), conn, fetch=Script(*steps), clock=clock or (lambda: next(ticks)))
+    return Poller(UpsConfig(host="x", retries=0), conn, fetch=Script(*steps), clock=clock or (lambda: next(ticks)))
 
 
 def refused():
@@ -82,6 +82,19 @@ def test_failed_poll_is_a_gap_with_no_sample(conn):
     assert not r.ok and r.error_kind == nut.UNREACHABLE and r.status is None
     assert conn.execute("SELECT COUNT(*) FROM samples").fetchone()[0] == 0
     assert conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0
+
+
+def test_unreachable_is_retried_within_the_poll(conn):
+    fetch = Script(nut.NutError(nut.UNREACHABLE, "timeout"), VARS)
+    p = Poller(UpsConfig(host="x", retries=1), conn, fetch=fetch, clock=lambda: 1000)
+    assert p.poll_once().ok and fetch.calls == 2
+
+
+def test_refused_and_protocol_errors_are_not_retried(conn):
+    for err in (refused(), nut.NutError(nut.PROTOCOL, "bad")):
+        fetch = Script(err, VARS)
+        p = Poller(UpsConfig(host="x", retries=1), conn, fetch=fetch, clock=lambda: 1000)
+        assert not p.poll_once().ok and fetch.calls == 1
 
 
 def test_missing_status_counts_as_failed_poll(conn):

@@ -3,7 +3,8 @@ ups:
   port: 3493
   name: ups1
   tls: true                      # STARTTLS with the UPS's self-signed certificate
-  connect_timeout_s: 3
+  connect_timeout_s: 5
+  retries: 1                     # immediate extra attempts after a timeout before a poll counts as a gap
   poll_interval_s: 5
   poll_interval_on_battery_s: 1
 
