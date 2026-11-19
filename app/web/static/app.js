@@ -115,7 +115,7 @@
     if (!d.monitor.alive) {
       const age = d.monitor.last_poll_ts ? fmtDuration(d.now - d.monitor.last_poll_ts) + " ago" : "never";
       box.appendChild(banner("crit", "The monitor service is not reporting (last poll " + age + "). Values below may be out of date."));
-    } else if (d.monitor.ups_ok === false) {
+    } else if (d.monitor.ups_ok === false && (d.sample_age_s === null || d.sample_age_s >= d.settings.unreachable_after_s)) {
       box.appendChild(banner("crit", "The monitor cannot read the UPS (" + (d.monitor.error_kind || "error") + "). Gaps appear in the charts."));
     }
     if (sample && !stale && flags.indexOf("OB") >= 0 && flags.indexOf("CAL") < 0) {

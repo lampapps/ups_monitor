@@ -120,6 +120,7 @@ def create_app(
                 "timezone": settings.DISPLAY_TIMEZONE,
                 "poll_interval_s": cfg.ups.poll_interval_s,
                 "stale_after_s": stale_after_s,
+                "unreachable_after_s": settings.UNREACHABLE_AFTER_S,
                 "version": settings.VERSION,
             },
             shutdown={
